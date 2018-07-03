@@ -67,6 +67,43 @@ class AdminUser extends AppActiveRecord
         return md5($password);
     }
 
+    /**
+     * 获取当前密码强度等级
+     * 从高到低依次为 5, 4, 3, 2, 1, 0
+     * @param string $str
+     * @return int
+     */
+    public static function getPwdLevel($str){
+        $strModel = 0;
+        $level = 0;
+        $pwdLength = strlen($str);
+        for($i=0; $i<$pwdLength; $i++){
+            $charCode = ord($str{$i});
+            if ($charCode >= 48 && $charCode <= 57) //数字
+                $charMode = 1;
+            else if ($charCode >= 65 && $charCode <= 90) //大写
+                $charMode = 2;
+            else if ($charCode >= 97 && $charCode <= 122) //小写
+                $charMode = 4;
+            else
+                $charMode = 8;
+            $strModel |= $charMode;
+        }
+        for($i=0; $i<4; $i++){
+            if($strModel & 1){
+                $level ++;
+            }
+            $strModel >>= 1;
+        }
+        if($pwdLength<6){
+            $level --;
+        }elseif($pwdLength>8){
+            $level ++;
+        }
+        $level = max($level, 0);
+        $level = min($level, 5);
+        return $level;
+    }
     const SCENARIO_CREATE = 'create';
     const SCENARIO_UPDATE = 'update';
 
